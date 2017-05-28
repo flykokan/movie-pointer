@@ -4,4 +4,3 @@ MoviePointer is a holistic approach for developing a movie recommendation system
 ![alt Screenshot 1](https://github.com/flykokan/movie-pointer/blob/master/images/moviep1.png)
 ___________________________________________________________________________________________________________________________
 ![alt Screenshot 2](https://github.com/flykokan/movie-pointer/blob/master/images/moviep2.png)
-
