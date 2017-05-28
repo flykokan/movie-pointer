@@ -1,0 +1,40 @@
+<?php
+/* @var $this SiteController */
+
+$this->pageTitle=Yii::app()->name . ' - About';
+$this->breadcrumbs=array(
+	'About',
+);
+?>
+
+
+<div id="whitebox">
+<h1>Create New Page</h1>
+<p>This is a test div that will change completely later on....</p>
+</div><br>
+
+<div id="whitebox">
+<h1>Edit Menu Items</h1>
+
+<?php $this->widget('zii.widgets.grid.CGridView', array(
+	   		'dataProvider' => $model->search(),
+	    		//'filter' => $model,
+	    		'columns' => array(
+	        		array(
+	           			'name' => 'label',
+	        			'header' => 'Label',
+	            			'value' => 'CHtml::encode($data->label)'
+	        		),
+				array(
+					'class'=>'CButtonColumn',
+					'buttons'=> array('delete' => array('visible'=>'false'),
+							  'view' => array('visible'=>'false'))
+
+				),
+	    		),
+		));
+?>
+
+</div>
+
+

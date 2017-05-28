@@ -1,0 +1,210 @@
+<?php
+
+class SiteController extends Controller
+{
+	/**
+	 * Declares class-based actions.
+	 */
+	public function actions()
+	{
+		return array(
+			// captcha action renders the CAPTCHA image displayed on the contact page
+			'captcha'=>array(
+				'class'=>'CCaptchaAction',
+				'backColor'=>0xFFFFFF,
+			),
+			// page action renders "static" pages stored under 'protected/views/site/pages'
+			// They can be accessed via: index.php?r=site/page&view=FileName
+			'page'=>array(
+				'class'=>'CViewAction',
+			),
+		);
+	}
+
+	/**
+	 * This function loads static pages dynamically
+	 */
+	public function actionLoadStaticPage()
+	{
+		// renders the view file 'protected/views/site/index.php'
+		// using the default layout 'protected/views/layouts/main.php'
+		$label=$_GET['label'];
+		$this->render('staticPages',array('label'=>$label));
+	}
+
+	/**
+	 * This is the default 'index' action that is invoked
+	 * when an action is not explicitly requested by users.
+	 */
+	public function actionIndex()
+	{
+		// renders the view file 'protected/views/site/index.php'
+		// using the default layout 'protected/views/layouts/main.php'
+		$this->render('index');
+	}
+
+	/**
+	 * This is the action to handle external exceptions.
+	 */
+	public function actionError()
+	{
+		if($error=Yii::app()->errorHandler->error)
+		{
+			if(Yii::app()->request->isAjaxRequest)
+				echo $error['message'];
+			else
+				$this->render('error', $error);
+		}
+	}
+
+	/**
+	 * Displays the contact page
+	 */
+	public function actionContact()
+	{
+		$model=new ContactForm;
+		if(isset($_POST['ContactForm']))
+		{
+			$model->attributes=$_POST['ContactForm'];
+			if($model->validate())
+			{
+				$name='=?UTF-8?B?'.base64_encode($model->name).'?=';
+				$subject='=?UTF-8?B?'.base64_encode($model->subject).'?=';
+				$headers="From: $name <{$model->email}>\r\n".
+					"Reply-To: {$model->email}\r\n".
+					"MIME-Version: 1.0\r\n".
+					"Content-type: text/plain; charset=UTF-8";
+
+				mail(Yii::app()->params['adminEmail'],$subject,$model->body,$headers);
+				Yii::app()->user->setFlash('contact','Thank you for contacting us. We will respond to you as soon as possible.');
+				$this->refresh();
+			}
+		}
+		$this->render('contact',array('model'=>$model));
+	}
+
+	/**
+	 * Displays the login page
+	 */
+	public function actionLogin()
+	{
+		$model=new LoginForm;
+
+		// if it is ajax validation request
+		if(isset($_POST['ajax']) && $_POST['ajax']==='login-form')
+		{
+			echo CActiveForm::validate($model);
+			Yii::app()->end();
+		}
+
+		// collect user input data
+		if(isset($_POST['LoginForm']))
+		{
+			$model->attributes=$_POST['LoginForm'];
+			// validate user input and redirect to the previous page if valid
+			if($model->validate() && $model->login())
+			{
+				echo "<script type=\"text/javascript\">";
+    			$x = CHtml::ajax(array(
+    			'url'=>CController::createUrl('site/log_valid'),
+    			'type'=>'POST',
+    			'datatype'=>'html',
+     			'update' =>'#personal_area' ));
+				echo $x;
+    			echo "</script>";
+				$this->redirect(Yii::app()->user->returnUrl);
+			}
+		}
+		// display the login form
+		$this->render('login',array('model'=>$model));
+	}
+
+	/**
+	 * Displays the about page
+	 */
+	public function actionAbout()
+	{
+		// display the about page
+		$this->render('about');
+	}
+
+	/**
+	 * Displays the Dashboard page
+	 */
+	public function actionDashboard()
+	{
+		$msg='';$changes=array();
+		$menus = MenuItem::model()-> findAll();
+
+		if(isset($_POST['checkbox'])){
+   			$msg=$_POST['checkbox'];
+			$changes= array_values($_POST['checkbox']);
+			foreach($menus as $m){
+				if($m->visible == 0 and in_array($m->label, $changes)){
+					$m->visible = 1;
+				}
+				elseif($m->visible == 1 and !(in_array($m->label, $changes))){
+					$m->visible = 0;
+				}
+				$m->update();
+			}
+			
+		}
+
+		// display dashboard
+		$this->render('dashboard', array('menus'=>$menus, 'changes'=>$changes, 'msg'=>$msg));
+	}
+
+	public function actionLog_valid()
+	{
+		$this->renderPartial('_personal_area',array(),false,true);
+	}
+	
+	/**
+	 * Logs out the current user and redirect to homepage.
+	 */
+	public function actionLogout()
+	{
+		if(Yii::app()->request->isAjaxRequest)
+		{
+			Yii::app()->user->logout();
+			echo "<script type=\"text/javascript\">";
+    		$x = CHtml::ajax(array(
+    		'url'=>CController::createUrl('site/log_valid'),
+    		'type'=>'POST',
+    		'datatype'=>'html',
+     		'update' =>'#personal_area' ));
+			echo $x;
+    		echo "</script>";
+			$this->redirect(Yii::app()->user->returnUrl);
+		}
+		Yii::app()->user->logout();
+		$this->redirect(Yii::app()->user->returnUrl);
+		
+	}
+	public function actionTest_region()
+	{
+		$dataProvider=new CActiveDataProvider('Regions',array(
+				'criteria'=>array(
+						'offset'=>0,
+						'limit'=>10,
+				)));
+		$this->render('test_region',array('dataProvider'=>$dataProvider));
+	}
+
+
+	public function actionRate()
+	{
+		$emotion='';
+		if(isset($_POST['ratingStar'])){
+			$emotion="qwerty" . $_POST['ratingStar'];
+		}
+
+		if(isset($_POST['clickable'])){
+			$emotion="!!!!!!!!" . $_POST['clickable'];
+		}
+
+		$this->render('rateMovies', array('emotion'=>$emotion));
+	}
+
+}

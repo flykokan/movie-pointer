@@ -1,0 +1,25 @@
+
+<?php
+/* @var $this SiteController */
+
+$this->pageTitle=Yii::app()->name . ' - About';
+$this->breadcrumbs=array(
+	'About',
+);
+?>
+<h1>Visible Menus</h1>
+
+<?php print_r($msg); echo "</br>"; print_r($changes); ?>
+
+<form method="post">
+<?php foreach ($menus as $m) {
+	if($m->visible == 1)
+		echo '<input type="checkbox" class="form" value='.$m->label.' name="checkbox[]" checked />'.$m->label;
+	else
+		echo '<input type="checkbox" class="form" value='.$m->label.' name="checkbox[]" />'.$m->label;
+      }
+?>
+    <input type="submit" name="formSubmit" value="Submit" />
+</form>
+
+

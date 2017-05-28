@@ -1,0 +1,28 @@
+<?php /* @var $this Controller */ ?>
+<?php $this->beginContent('//layouts/main'); ?>
+<div id="content">
+	<div class="content_area"> 
+	<?php echo $content; ?>
+	</div>
+	<div class="personal_area box">
+		<div class="box">
+			<div class="box_header">
+				Login
+		</div>
+             Login Area
+             <br>
+             <br>
+         </div>
+<div class="box">
+	<div class="box_header">
+				Dashboard
+		</div>
+<ul>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/menuItems')?>">Menu items</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/editStaticPages')?>">Static Pages</a></li>
+</ul> 
+             <br>
+        </div>
+	</div>
+</div><!-- content -->
+<?php $this->endContent(); ?>

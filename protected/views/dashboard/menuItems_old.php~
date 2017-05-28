@@ -1,0 +1,98 @@
+<?php
+/* @var $this SiteController */
+
+$this->pageTitle=Yii::app()->name . ' - About';
+$this->breadcrumbs=array(
+	'About',
+);
+?>
+
+
+<h1>Edit Menu Items</h1>
+
+<?php print_r($msg); ?>
+
+<form method="post">
+<?php foreach ($menus as $m) {
+	if($m->visible == 0)
+		echo '<input type="radio" name="editLabel" value='.$m->menu_id.' />'.$m->label.' <em>(not in menu)</em></br>';
+	else
+		echo '<input type="radio" name="editLabel" value='.$m->menu_id.' />'.$m->label.'</br>';
+      }
+?>
+
+    	</br><input type="submit" name="editMenu" value="Edit" />
+	<input type="submit" name="createMenu" value="Create new" />
+	</form></br></br>
+
+<!-- Editing Menu Item -->
+<?php
+if($menu != '' and $menu != 'new'){ ?>
+
+	<form method="post">
+	Label: <input type="text" name="editedLabel"><br>
+	<?php
+	if($menu->visible == 1)
+		echo '<input type="checkbox" class="form" value=1 name="checkbox[]" checked />Visible';
+	elseif($menu->type_id == 1){
+		//Check the content of the correspondent 
+		if($content == ''){
+			echo '<input type="checkbox" class="form" value=1 name="checkbox[]" disabled/>Visible';
+		}
+		else
+			echo '<input type="checkbox" class="form" value=1 name="checkbox[]" />Visible';
+	}
+	else
+		echo '<input type="checkbox" class="form" value=1 name="checkbox[]" />Visible';
+	?>
+	<input type="hidden" name="menu_id" value="<?php echo $menu_id; ?>">
+    	</br><input type="submit" name="saveEdit" value="Save" />
+	</form>
+<?php
+}
+?>
+
+<!-- Creating Menu Item -->
+<?php
+if($menu == 'new'){ ?>
+
+	<form method="post">
+	Label: <input type="text" name="label" required><br>
+
+	<br>Your menu item should appear after:<br>
+	<?php foreach ($menus as $m) {
+		echo '<input type="radio" name="seq" value='.$m->sequence.' required/>'.$m->label;
+     		}
+	?><br>
+
+	<br>Select the roles that should see this menu item:<br>
+	<?php foreach ($roles as $r) {
+		echo '<input type="checkbox" class="form" value='.$r->role_id.' name="checkbox[]" />'.$r->description;
+     		}
+	      echo '</br><input type="checkbox" class="all" value=All name="checkbox[]" />All';
+	      echo '</br><input type="checkbox" class="all" value=All name="checkbox[]" />Logged In';
+	?>
+
+    	<br><br><input type="submit" name="saveCreate" value="Save"/>
+	</form>
+
+<?php
+}
+?>
+
+<b> <input type="checkbox" id="chkSelect" /> Check/Uncheck me </b>
+  <br/><br/>
+  <input type="button" id="btnStatus" value="Get Checkbox status" />   
+
+
+<script>
+
+
+   $('#btnStatus').click(function(){
+      var isChecked = $('#chkSelect').attr('checked');
+      alert(isChecked);
+   });
+
+
+</script>
+

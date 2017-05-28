@@ -1,0 +1,51 @@
+<?php /** @var $this Controller 
+*
+*	layout that contains the personal area on the left.
+*	@author Nikos Kostoulas
+*	
+*/ ?>
+<?php $this->beginContent('//layouts/main'); ?>
+
+
+<div class="span-5 ">
+	<div class="diana_box_container" id="personal_area">
+		<div class="box_header" id="breadcrumbs">
+			<?php if(isset($this->breadcrumbs)):
+				$counter=1;
+				foreach($this->breadcrumbs as $header=>$link):?>
+					<?php if(!empty($link)):?>
+					<a href="<?php echo $link?>"><?php echo $header;?></a>
+					<?php else:?>
+					<?php echo $header;?>
+					<?php endif;?>
+					<?php if($counter++<count($this->breadcrumbs)) echo "»"?>
+				<?php endforeach;?>
+			<?php endif;?>
+		</div>
+		<div class="box_content">
+			<div id="personal_area_content">
+				<?php $this->widget('PersonalArea');?>
+			</div>
+			<!--<div id="footer">
+				<div class="footer">		
+					Created by:<br/> <a href="http://www.fleming.gr/" target="_blank"><img
+						src="images/fleming.png" alt="B.S.R.C. Alexander Fleming"
+						title="B.S.R.C. Alexander Fleming" border="0" /></a> <a
+						href="http://www.ipsyp.gr" target="_blank"  title=""><img
+						src="images/imis.png" border="0" alt='Imis-Athena R.C.'
+						 title='Imis-Athena R.C.'/> </a>
+				</div>
+			</div>-->
+		</div>
+	</div>
+	<!-- sidebar -->
+</div>
+
+<div class="span-19">
+	<div id="content">
+		<?php echo $content; ?>
+	</div>
+	<!-- content -->
+</div>
+
+<?php $this->endContent(); ?>

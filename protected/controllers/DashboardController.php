@@ -1,0 +1,284 @@
+<?php
+
+class DashboardController extends Controller
+{
+	/**
+	 * Declares class-based actions.
+	 */
+	public function actions()
+	{
+		return array(
+			// captcha action renders the CAPTCHA image displayed on the contact page
+			'captcha'=>array(
+				'class'=>'CCaptchaAction',
+				'backColor'=>0xFFFFFF,
+			),
+			// page action renders "static" pages stored under 'protected/views/site/pages'
+			// They can be accessed via: index.php?r=site/page&view=FileName
+			'page'=>array(
+				'class'=>'CViewAction',
+			),
+		);
+	}
+
+	/**
+	 * This is the action to handle external exceptions.
+	 */
+	public function actionError()
+	{
+		if($error=Yii::app()->errorHandler->error)
+		{
+			if(Yii::app()->request->isAjaxRequest)
+				echo $error['message'];
+			else
+				$this->render('error', $error);
+		}
+	}
+
+	/**
+	 * Displays the menu items page of Dashboard
+	 */
+	public function actionManageContent()
+	{
+		$model=new MenuItem('search');
+		$test=new MenuItem('search');
+		$model->unsetAttributes();  // clear any default values
+		//if(isset($_GET['User']))
+			//$model->attributes=$_GET['User'];
+
+		$this->render('manageContent',array(
+				'model'=>$model, 'test'=>$test,
+		));
+
+		//$menus = MenuItem::model()->findAll(array("order"=>"sequence"));
+		//$this->render('menuItems', array('menus'=>$menus));
+	}
+
+	public function actionUpdate($id)
+	{
+
+		$db_roles=array();$content='';
+		$roles_in_db=array_values(MenuRole::model()-> findAllByAttributes(array('menu_id'=>$id)));
+		foreach($roles_in_db as $r){
+			array_push($db_roles, $r->role_id);
+		}
+		
+		$model=$this->loadModel($id);
+		$static_page=StaticPage::model()-> findByAttributes(array('menu_id'=>$id));
+		if($model->type_id == 1)		
+			$content=$static_page->content;
+		$roles=UserRole::model()-> findAll();
+		$menus = MenuItem::model()->findAll(array("order"=>"sequence"));
+
+		// Uncomment the following line if AJAX validation is needed
+		// $this->performAjaxValidation($model);
+
+		if(isset($_POST['Menu']))
+		{
+			
+			if($model->update()){
+				Yii::app()->user->setFlash('message','Changes saved!');
+				$this->redirect(array('view','id'=>$model->menu_id));
+			}
+		}
+
+		if(isset($_POST['saveEdit'])){
+			$m=MenuItem::model()-> findByAttributes(array('menu_id'=>$id));
+
+			//Update the sequence of the existing menu items
+			if(isset($_POST['seq'])){
+				$m->sequence = $_POST['seq'] + 1;
+				foreach ($menus as $m1) {
+					if($m1->sequence > $_POST['seq']){
+						$m1->sequence = $m1->sequence + 1;
+						$m1->update();
+					}
+				}
+			}
+
+			//Update the menu_role table
+			if(isset($_POST['role'])){
+				$roles_selected = array_values($_POST['role']);
+				$roles_count = count($roles_selected);
+
+				//Handling of the roles that are removed
+				foreach($db_roles as $r){
+					if(!in_array($r, $roles_selected)){
+						MenuRole::model()->deleteAll("role_id='".$r."' and menu_id='".$id."'");
+					}						
+				}				
+
+				//Handling of the roles that are added
+				foreach($roles_selected as $r){
+					if(!in_array($r, $db_roles)){
+						$model_menu_role = new MenuRole();
+						$model_menu_role->menu_id = $id;
+						$model_menu_role->role_id = $r; //$r->role_id;
+						if($model_menu_role->save() && $roles_count == 1){
+							Yii::app()->user->setFlash('message','The menu item has been created successfully. Edit the new page to add content.');
+							$this->refresh();
+						}
+					$roles_count = $roles_count - 1;
+					}
+				}
+
+				//Special handling for the anonymous users 
+				if(isset($_POST['loggedIn_checkbox'])){
+					$model_menu_role = new MenuRole();
+					$model_menu_role->menu_id = $id;
+					$model_menu_role->role_id = 0;
+					if($model_menu_role->save()){
+						Yii::app()->user->setFlash('message','The menu item has been created successfully. Edit the new page to add content.');
+						$this->refresh();
+						}
+				}
+			}
+
+			//
+			if(isset($_POST['txtarea'])){
+				$static_page->content = $_POST['txtarea'];
+				$static_page->update();
+			}
+
+			//Update the label & visibility
+			if($_POST['editedLabel'] != '')
+				$m->label = $_POST['editedLabel'];
+			if($m->visible == 0 and isset($_POST['checkbox'])){
+				$m->visible = 1;
+			}
+			elseif($m->visible == 1 and !(isset($_POST['checkbox']))){
+				$m->visible = 0;
+			}
+			if($m->update()){
+				Yii::app()->user->setFlash('message','The menu item has been updated successfully.');
+				$this->refresh();
+			}
+		}
+
+		$this->render('update',array('menu'=>$model, 'content'=>$content, 'roles'=>$roles, 'menus'=>$menus,
+				'db_roles'=>$db_roles));
+
+	}
+
+	/**
+	 * Returns the data model based on the primary key given in the GET variable.
+	 * If the data model is not found, an HTTP exception will be raised.
+	 * @param integer the ID of the model to be loaded
+	 */
+	public function loadModel($id)
+	{
+		$model=MenuItem::model()->findByPk($id);
+		if($model===null)
+			throw new CHttpException(404,'The requested page does not exist.');
+		return $model;
+	}
+
+	public function actionCreateNewPage()
+	{
+		$menus = MenuItem::model()->findAll(array("order"=>"sequence"));
+		$roles=UserRole::model()-> findAll();
+
+		if(isset($_POST['saveCreate'])){
+			//Check that the label does not already exist
+			if(MenuItem::model()-> findByAttributes(array('label'=>$_POST['label']))){
+				Yii::app()->user->setFlash('error','A menu item with this label already exists.');
+				$this->redirect(array('dashboard/menuItems'));
+
+			}
+
+			//New record in menu_item table
+			$model_menu = new MenuItem();
+			$model_menu->label = $_POST['label'];
+			$model_menu->sequence = $_POST['seq'] + 1;
+			$model_menu->type_id=1;
+			$model_menu->visible=0;
+			$error=0;
+			if($model_menu->save()){
+
+				//Update the sequence of the existing menu items
+				foreach ($menus as $m) {
+					if($m->sequence > $_POST['seq']){
+						$m->sequence = $m->sequence + 1;
+						$m->update();
+					}
+				}
+
+				//New record in static_page table
+				$mid=MenuItem::model()-> findByAttributes(array('label'=>$_POST['label']))->menu_id;
+				$model_page = new StaticPage();
+				$model_page->menu_id = $mid;
+				if(isset($_POST['txtarea'])){
+					$model_page->content = $_POST['txtarea'];
+				}
+				$model_page->save();
+
+				//New record in menu_role table
+				$roles=UserRole::model()-> findAll();
+				if(isset($_POST['role'])){
+					$roles_selected = array_values($_POST['role']);
+					$roles_count = count($roles_selected);
+					//foreach($roles as $r){
+					foreach($roles_selected as $r){
+						//if(in_array($r->role_id, $roles_selected)){
+							$model_menu_role = new MenuRole();
+							$model_menu_role->menu_id = $mid;
+							$model_menu_role->role_id = $r; //$r->role_id;
+							if($model_menu_role->save() && $roles_count == 1){
+								Yii::app()->user->setFlash('message','The menu item has been created successfully. Edit the new page to add content.');
+								$this->refresh();
+							}
+						$roles_count = $roles_count - 1;
+						//}
+					}
+				}
+			}
+		}
+
+		$this->render('createNewPage', array('menus'=>$menus, 'roles'=>$roles));
+	}
+
+	public function actionManageRatings()
+	{
+		$model=new UserRating('search');
+		$model->unsetAttributes();  // clear any default values
+
+		if(isset($_GET['UserRating']))
+			$model->attributes=$_GET['UserRating'];
+
+		$this->render('manageRatings',array(
+				'model'=>$model,
+		));
+	}
+
+	public function actionManageLogs()
+	{
+		$model=new UserRatingLog('search');
+		$model->unsetAttributes();  // clear any default values
+
+		$this->render('manageLog',array(
+				'model'=>$model,
+		));
+	}
+
+	public function actionManageBlog()
+	{
+		$model=new BlogPost('search');
+		$model->unsetAttributes();  // clear any default values
+		//if(isset($_GET['User']))
+			//$model->attributes=$_GET['User'];
+
+		$this->render('manageBlog',array(
+				'model'=>$model, 
+		));
+
+		//$this->render('manageBlog');
+
+	}
+
+	public function actionUpdatePost($id)
+	{
+		$model=new ContactForm;
+		$this->render('/site/contact', array('model'=>$model));
+	}
+
+}

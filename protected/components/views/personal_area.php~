@@ -1,0 +1,52 @@
+<?php if (Yii::app()->user->isGuest): ?>
+	<div class="box">
+    	<div class="box_header">
+    	Register	
+		</div>
+		<a href="<?=Yii::app()->createUrl("user/create")?>">Sign up</a><br>
+		<a href="<?=Yii::app()->createUrl("site/login")?>">Login</a>
+	</div>
+
+		<?php //if (Yii::app()->user->isAdmin()): ?>
+		<div class="box">
+			<div class="box_header">
+				Dashboard
+		</div>
+             <ul>
+	<li><a href="<?php echo Yii::app()->createUrl('user/admin')?>">Manage Users</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('producer/admin')?>">View Producers</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/manageContent')?>">Manage Content</a></li>
+	<!--<li><a href="<?php echo Yii::app()->createUrl('dashboard/menuItems')?>">Menu items</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/editStaticPages')?>">Static Pages</a></li>-->
+</ul> 
+             <br>
+	</div>
+	<?php //endif; ?>  
+
+
+<?php else:?>
+	<?php $user=Yii::app()->user->loadUser();?>
+<div class="box">
+    <div class="box_header">
+    Welcome &nbsp; <b style="color:#06c"><?php echo Yii::app() -> user -> name; ?></b>
+    
+    </div> 
+	<a href="<?=Yii::app()->createUrl("site/logout")?>">Logout?</a>
+	</br><a href="<?=Yii::app()->createUrl('user/edit', array('id'=>User::model()->findByAttributes(array('username'=>Yii::app() -> user -> name))->user_id))?>">Edit Profile</a>
+</div>
+		<?php //if (Yii::app()->user->isAdmin()): ?>
+		<div class="box">
+			<div class="box_header">
+				Dashboard
+		</div>
+             <ul>
+	<li><a href="<?php echo Yii::app()->createUrl('user/admin')?>">Manage Users</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('producer/admin')?>">View Producers</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/manageContent')?>">Manage Content</a></li>
+	<!--<li><a href="<?php echo Yii::app()->createUrl('dashboard/menuItems')?>">Menu items</a></li>
+	<li><a href="<?php echo Yii::app()->createUrl('dashboard/editStaticPages')?>">Static Pages</a></li>-->
+</ul> 
+             <br>
+	</div>
+	<?php //endif; ?>
+<?php endif; ?>

@@ -1,0 +1,32 @@
+<?php
+/* @var $this SiteController */
+
+$this->pageTitle=Yii::app()->name . ' - About';
+$this->breadcrumbs=array(
+	'About',
+);
+?>
+<h1>About</h1>
+
+<p>This is a "static" page. You may change the content of this page
+by updating the file <code><?php echo __FILE__; ?></code>.</p>
+
+<?php
+$show=1;
+$menus = MenuItem::model()-> findAllByAttributes(array('visible'=>1));
+
+//print_r($menus);
+foreach($menus as $m){
+$m->visible = 0;
+$m->update();
+echo $m->label;
+}
+
+
+$a=array();
+array_push($a,"blue","yellow");
+print_r($a);
+
+
+
+?>
